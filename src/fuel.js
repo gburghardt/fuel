@@ -103,7 +103,7 @@ this.Fuel = (function (global) {
 		var target = event.target || event.srcElement,
 			series = target.getAttribute("data-series"),
 			code = event.code || event.keyCode || event.which,
-			elements, i;
+			elements, i, maxLength;
 
 		if (!series || target.nodeName !== "INPUT" || target.type !== "text") {
 			return;
@@ -111,6 +111,10 @@ this.Fuel = (function (global) {
 		else if (code in metaKeyCodes && code != metaKeys.Backspace) {
 			return;
 		}
+
+		maxLength = target.maxLength > 0
+			? target.maxLength
+			: target.size;
 
 		elements = target.parentNode.querySelectorAll("input[data-series=" + series + "]");
 
@@ -127,7 +131,7 @@ this.Fuel = (function (global) {
 				}
 			}
 		}
-		else if (target.value.length === target.maxLength) {
+		else if (target.value.length === maxLength) {
 			// Move focus to next field
 			for (i = 0; i < elements.length; i++) {
 				if (target === elements[i] && i + 1 < elements.length) {
@@ -136,6 +140,9 @@ this.Fuel = (function (global) {
 					break;
 				}
 			}
+		}
+		else if (target.value.length > maxLength) {
+			target.value = target.value.substring(0, maxLength);
 		}
 	});
 
