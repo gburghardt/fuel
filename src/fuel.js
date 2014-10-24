@@ -4,8 +4,11 @@ this.Fuel = (function (global) {
 	    root = document.documentElement,
 		addEvent = root.addEventListener
 			? function(element, event, callback) {
-				if (event == "focusin" || event == "focusout") {
-					element.addEventListener(event, callback, true);
+				if (event === "focusin") {
+					element.addEventListener("focus", callback, true);
+				}
+				else if (event === "focusout") {
+					element.addEventListener("blur", callback, true);
 				}
 				else {
 					element.addEventListener(event, callback, false);
@@ -14,6 +17,14 @@ this.Fuel = (function (global) {
 			: function (element, event, callback) {
 				element.attachEvent("on" + event, callback);
 			},
+		delay = function(millis, callback, args) {
+			args = args instanceof Array ? args :[args];
+
+			setTimeout(function() {
+				callback.apply(null, args);
+				callback = args = null;
+			}, millis);
+		},
 		focusEnd = function(element) {
 			element.focus();
 
@@ -28,6 +39,25 @@ this.Fuel = (function (global) {
 				range.select();
 			}
 		},
+		getMaxLength = function(element) {
+			return Number(element.getAttribute("maxlength") || element.getAttribute("size") || "0");
+		},
+		hasSelection = function(element) {
+			if ("selectionStart" in element) {
+				return element.selectionStart != element.selectionEnd;
+			}
+			else if ("selection" in document) {
+				element.focus();
+				var range = document.selection.createRange();
+
+				return ("toString" in range)
+					? !!range.toString()
+					: !!range.text;
+			}
+			else {
+				return false;
+			}
+		},
 		preventDefault = function(event) {
 			if (event.preventDefault) {
 				event.preventDefault();
@@ -36,18 +66,6 @@ this.Fuel = (function (global) {
 				event.returnValue = false;
 			}
 		},
-		removeEvent = root.addEventListener
-			? function(element, event, callback) {
-				if (event == "focusin" || event == "focusout") {
-					element.removeEventListener(event, callback, true);
-				}
-				else {
-					element.removeEventListener(event, callback, false);
-				}
-			}
-			: function(element, event, callback) {
-				element.detachEvent("on" + event, callback);
-			},
 		filters = {
 				alpha: /[a-zA-Z]/,
 				alphaNumeric: /[a-zA-Z0-9]/,
@@ -75,8 +93,79 @@ this.Fuel = (function (global) {
 				Del: 46
 			};
 
-	// Filters
-	addEvent(root, "keypress", function(event) {
+	function handleAutoTab(event) {
+		event = event || global.event;
+
+		var target = event.target || event.srcElement,
+			series = target.getAttribute("data-autotab"),
+			code = event.code || event.keyCode || event.which || -1,
+			elements, i, maxLength, nextElement;
+
+		if (!series || target.nodeName !== "INPUT" || target.type !== "text") {
+			return;
+		}
+		else if (code in metaKeyCodes && code != metaKeys.Backspace) {
+			return;
+		}
+
+		maxLength = getMaxLength(target);
+		elements = target.parentNode.querySelectorAll("input[data-autotab=" + series + "]");
+
+		if (code == metaKeys.Backspace) {
+			if (event.type == "keyup" && !target.value.length) {
+				// Move focus to previous field when value is empty
+				i = elements.length;
+
+				while (i--) {
+					if (target == elements[i] && i - 1 >= 0) {
+						focusEnd(elements[i - 1]);
+					}
+				}
+			}
+		}
+		else if (event.type == "keypress" && (target.value.length === maxLength || target.value.length + 1 === maxLength) && !hasSelection(target)) {
+			if (target.value.length === maxLength) {
+				preventDefault(event);
+			}
+
+			// Move focus to next field
+			for (i = 0; i < elements.length; i++) {
+				if (target === elements[i] && i + 1 < elements.length) {
+					nextElement = elements[i + 1];
+
+					if (!nextElement.value && target.value.length === maxLength) {
+						nextElement.value = String.fromCharCode(code);
+					}
+
+					// Delay the call to focusEnd because IE will apply the new character
+					// to the next text box if the focus is set inside the event handler
+					// for the previous text box.
+					delay(0, focusEnd, nextElement);
+
+					break;
+				}
+			}
+		}
+	}
+
+	function handleTextBoxMaxLength(event) {
+		event = event || global.event;
+
+		var target = event.target || event.srcElement,
+			maxLength = -1;
+
+		if (target.nodeName !== "INPUT" || target.type !== "text" || target.disabled) {
+			return true;
+		}
+
+		maxLength = getMaxLength(target);
+
+		if (maxLength && target.value.length > maxLength) {
+			target.value = target.value.substring(0, maxLength);
+		}
+	}
+
+	function handleTextBoxFilter(event) {
 		event = event || global.event;
 
 		var target = event.target || event.srcElement,
@@ -89,62 +178,20 @@ this.Fuel = (function (global) {
 		}
 
 		filter = target.getAttribute("data-filter");
-		regex = filters[filter] || new RegExp(filter);
+
+		regex = filters[filter]
+			 // Memoize custom filters so the cached RegExp object is used next time
+		     || (filters[filter] = new RegExp(filter));
 
 		if (!regex.test(key)) {
 			preventDefault(event);
 		}
-	});
+	}
 
-	// Auto Focus next element in series
-	addEvent(root, "keyup", function(event) {
-		event = event || global.event;
-
-		var target = event.target || event.srcElement,
-			series = target.getAttribute("data-series"),
-			code = event.code || event.keyCode || event.which,
-			elements, i, maxLength;
-
-		if (!series || target.nodeName !== "INPUT" || target.type !== "text") {
-			return;
-		}
-		else if (code in metaKeyCodes && code != metaKeys.Backspace) {
-			return;
-		}
-
-		maxLength = target.maxLength > 0
-			? target.maxLength
-			: target.size;
-
-		elements = target.parentNode.querySelectorAll("input[data-series=" + series + "]");
-
-		if (code == metaKeys.Backspace) {
-			if (!target.value) {
-				// Move focus to previous field when value is empty
-				i = elements.length;
-
-				while (i--) {
-					if (target == elements[i] && i - 1 >= 0) {
-						focusEnd(elements[i - 1]);
-						break;
-					}
-				}
-			}
-		}
-		else if (target.value.length === maxLength) {
-			// Move focus to next field
-			for (i = 0; i < elements.length; i++) {
-				if (target === elements[i] && i + 1 < elements.length) {
-					elements[i + 1].focus();
-					elements[i + 1].select();
-					break;
-				}
-			}
-		}
-		else if (target.value.length > maxLength) {
-			target.value = target.value.substring(0, maxLength);
-		}
-	});
+	addEvent(root, "keypress", handleTextBoxFilter);
+	addEvent(root, "keypress", handleAutoTab);
+	addEvent(root, "keyup", handleAutoTab);
+	addEvent(root, "focusout", handleTextBoxMaxLength);
 
 	return {
 		Filters: filters
