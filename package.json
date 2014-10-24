@@ -1,0 +1,14 @@
+{
+	"name": "Fuel",
+	"description": "Just a few quick and dirty usability enhancements.",
+	"version": "1.0.0",
+	"homepage": "https://github.com/gburghardt/fuel",
+	"authors": "Greg Burghardt <greg_burghardt@yahoo.com>",
+	"devDependencies": {
+		"grunt": "~0.4",
+		"grunt-contrib-concat": "~0.1",
+		"grunt-contrib-jshint": "~0.6",
+		"grunt-contrib-nodeunit": "~0.2",
+		"grunt-yui-compressor": "~0.3"
+	}
+}
