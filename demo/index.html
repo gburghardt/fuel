@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Demo: Form Usability Enhancement Library (FUEL)</title>
+	<script type="text/javascript" src="../src/fuel.js"></script>
+</head>
+<body>
+	<p>
+		<input type="text" data-filter="numeric" placeholder="Numbers only please!">
+		<input type="text" data-filter="[your mom]" placeholder="your mom only">
+	</p>
+	<fieldset>
+		<legend>Focus next element in the series</legend>
+		<input type="text" size="3" maxlength="3" data-series="ssn" data-filter="numeric"> -
+		<input type="text" size="2" maxlength="2" data-series="ssn" data-filter="numeric"> -
+		<input type="text" size="4" maxlength="4" data-series="ssn" data-filter="numeric">
+	</fieldset>
+</body>
+</html>
