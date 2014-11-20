@@ -1,25 +1,29 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>Demo: Form Usability Enhancement Library (FUEL)</title>
-	<script type="text/javascript" src="../src/fuel.js"></script>
+	<script type="text/javascript" src="../dist/Fuel-v1.1.0.min.js"></script>
 </head>
 <body>
 	<p>
 		<input type="text" data-filter="numeric" placeholder="Numbers only please!">
-		<input type="text" data-filter="[your mom]" placeholder="your mom only">
+		<input type="text" data-filter="[your mom]" placeholder="&quot;your mom&quot; only">
+		<input type="text" data-filter="[^'&quot;]" placeholder="Anything but quotes">
+		<input type="password" data-filter="[^'&quot;]" placeholder="Anything but quotes">
 	</p>
 	<fieldset>
-		<legend>Focus next element in the series</legend>
-		<input type="text" size="3" data-autotab="ssn" data-filter="numeric"> -
-		<input type="text" size="2" data-autotab="ssn" data-filter="numeric"> -
-		<input type="text" size="4" data-autotab="ssn" data-filter="numeric">
-	</fieldset>
-	<fieldset>
-		<legend>Focus next element in the series (max length)</legend>
+		<legend>Focus next element in the series (maxlength)</legend>
 		(<input type="text" size="3" maxlength="3" data-autotab="ssn" data-filter="numeric">)
 		<input type="text" size="2" maxlength="2" data-autotab="ssn" data-filter="numeric"> -
 		<input type="text" size="4" maxlength="4" data-autotab="ssn" data-filter="numeric">
+	</fieldset>
+	<fieldset>
+		<legend>Focus next element in the series (missing maxlength)</legend>
+		<p>A JavaScript error gets thrown if the maxlength attribute is missing</p>
+		<input type="text" size="3" data-autotab="ssn" data-filter="numeric"> -
+		<input type="text" size="2" data-autotab="ssn" data-filter="numeric"> -
+		<input type="text" size="4" data-autotab="ssn" data-filter="numeric">
 	</fieldset>
 
 	<fieldset>

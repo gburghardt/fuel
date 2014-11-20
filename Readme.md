@@ -2,31 +2,14 @@
 
 Just a few quick and dirty usability enhancements.
 
-- Enforce form field max lengths on blur
+- Support for the `maxlength` attribute on text areas for non compatible browsers
 - Text box filters to prevent invalid characters from appearing
 - Setting focus to the next text box in the series when a max length is reached
 
-## Enforce Text Box Max Lengths
+## Supporting `maxlength` on Textareas
 
-The `maxlength` attribute on text boxes prevents the user from typing
-more than they should, however this doesn't prevent people from
-pasting too many characters. This library will remove excess
-characters when focus is moved away from the field.
-
-```html
-<input type="text" size="10" maxlength="5">
-<input type="text" size="10">
-```
-
-In the first tag, the `maxlength` attribute is used to chop off excess
-characters. The second text box is missing the `maxlength` attribute
-so no characters are removed.
-
-### Supporting `maxlength` on Textareas
-
-Even though the `maxlength` attribute does not affect `<textarea>`
-elements on some browsers, the excess characters will get trimmed
-anyway on-blur.
+The `maxlength` attribute does not work in some browsers. Fuel patches this so
+it respects the `maxlength` attribute.
 
 ## Character Filters On Text Boxes
 
@@ -93,8 +76,10 @@ Phone Number:
 ## Extending Fuel
 
 You can extend Fuel. The global variable `Fuel` is available for you.
-Currently the only extensions you can create are adding named input
-filters:
+
+### Custom Textbox Filters
+
+You create custom named input filters:
 
 ```javascript
 Fuel.Filters.foo = /[:0-9]/;
@@ -105,3 +90,26 @@ Then you can reference it by name:
 ```html
 <input type="text" data-filter="foo">
 ```
+
+### Creating Plugins
+
+The `Fuel.plugin` function allows you to create your own plugins for Fuel.
+
+```javascript
+Fuel.plugin(function(global, document, root, metaKeys, addEvent) {
+	// Your plugin code here
+});
+```
+
+The `root` argument is the element to which Fuel attaches all of its events,
+which is the `<html>` tag. The `addEvent` argument is a cross browser way to add
+events to DOM nodes:
+
+```javascript
+addEvent(element, "click", function(event) {
+	event = event || global.event;
+	// process event...
+});
+```
+
+Plugins should utilize event delegation as much as possible.

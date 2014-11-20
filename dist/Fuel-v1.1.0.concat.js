@@ -1,3 +1,4 @@
+/*! Fuel, Version 1.1.0 (2014/11/19) */
 this.Fuel = (function (global) {
 
 var document = global.document,
